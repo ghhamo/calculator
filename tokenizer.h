@@ -57,22 +57,31 @@ double toDouble(const char *s, int start, int stop) {
     return ret;
 }
 
-struct TokenArray{
-    struct Token * tokens;
+struct TokenArray {
+    struct Token *tokens;
     int size;
 };
 
-struct TokenArray tokenize(const char *expression_string, unsigned int sizeOfStr) {
+struct TokenArray tokenize(const char expression_string[], unsigned int sizeOfStr) {
     int t = 0;
-    struct Token *tokens = malloc(sizeOfStr * sizeof(struct Token));
+    struct Token *tokens;
+    if (sizeOfStr * sizeof(struct Token) == 0) {
+        tokens = malloc(1 * sizeof(struct Token));
+    } else {
+        tokens = malloc(sizeOfStr * sizeof(struct Token));
+    }
     int numStart = -1;
     int numEnd;
     int isExpressionExpected = 1;
+    if (sizeOfStr == 0) {
+        tokens->operator = '\n';
+    }
     for (int i = 0; i < sizeOfStr; ++i) {
         char currentChar = expression_string[i];
         char nextChar = expression_string[i + 1];
-        if (currentChar == ' ') continue;
-        if (currentChar == '.' || (currentChar <= '9' && currentChar >= '0')) {
+        if (currentChar == ' ') {
+            continue;
+        } else if (currentChar == '.' || (currentChar <= '9' && currentChar >= '0')) {
             if (numStart == -1) {
                 numStart = i;
             }
