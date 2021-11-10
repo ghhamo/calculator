@@ -1,3 +1,8 @@
+#ifndef CALCULATOR
+#define CALCULATOR
+#include <stdio.h>
+#include <stdlib.h>
+#include "tokenizer.h"
 
 double calculateOperator(double left, double right, Operator operator);
 
@@ -14,7 +19,7 @@ void processOperator(struct Token **operators_stack, int * index_of_operators, d
     }
 }
 
-double calculate(struct TokenArray tokenArray) {
+double calculateExpressionTokens(struct TokenArray tokenArray) {
     struct Token *tokens = tokenArray.tokens;
     const int size = tokenArray.size;
     double *output_stack = malloc(size * sizeof(double));
@@ -56,7 +61,7 @@ double calculate(struct TokenArray tokenArray) {
         }
         processOperator(operators_stack, &index_of_operators, output_stack, &index_of_output);
     }
-    double result = output_stack[0];
+    double result = index_of_output == -1 ? 0 : output_stack[0];
     free(operators_stack);
     free(output_stack);
     return result;
@@ -77,3 +82,4 @@ double calculateOperator(double left, double right, Operator operator) {
             abort();
     }
 }
+#endif

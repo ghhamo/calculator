@@ -6,61 +6,65 @@
 
 char *readFile(char *input);
 
-char *takeLine(int start, int end, const char *expression_string);
+char *takeLine(unsigned int start, unsigned int end, const char *expression_string);
 
-void allProcess(char *expression_string, int size, FILE *output);
+void calculateExpressionString(char *expression_string, unsigned int size, FILE *outputFile);
 
-int main() {
-    FILE *output;
-    fopen_s(&output, "..\\output.txt", "w");
-    char *expression_string = readFile("..\\input.txt");
-    int strLen = strlen(expression_string);
-    int size = 0;
-    int currentSize = 0;
-    int numberOfEnter = 0;
-    for (int i = 0; i < strLen; ++i) {
-        if (expression_string[i] == '\n') {
-            allProcess(takeLine(currentSize, size, expression_string), size, output);
-            currentSize += size + 1;
-            size = -1;
-            numberOfEnter++;
-        }
-        size++;
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("No path to input text was provided. Provide path as the first argument, like `./calculator path/to/input.txt`.");
+        return 0;
     }
-    allProcess(takeLine(currentSize, size - numberOfEnter, expression_string), size - numberOfEnter, output);
+    char *inputFileName = argv[1];
+    FILE *outputFile = fopen("output.txt", "w");
+    char *fileContent = readFile(inputFileName);
+    unsigned int fileContentLength = strlen(fileContent);
+    int expressionStartIndex = 0;
+    for (int i = 0; i < fileContentLength; ++i) {
+        char currentChar = fileContent[i];
+        if (currentChar == '\n') {
+            calculateExpressionString(takeLine(expressionStartIndex, i, fileContent), i - expressionStartIndex,
+                                      outputFile);
+            expressionStartIndex = i + 1;
+        }
+
+    }
+
+    if (expressionStartIndex < fileContentLength) {
+        calculateExpressionString(takeLine(expressionStartIndex, fileContentLength, fileContent),
+                                  fileContentLength - expressionStartIndex, outputFile);
+    }
 }
 
 char *readFile(char *input) {
-    FILE *currentF;
-    fopen_s(&currentF, input, "r");
-    assert(currentF);
-    fseek(currentF, 0, SEEK_END);
-    long length = ftell(currentF);
-    fseek(currentF, 0, 0);
-    char *buffer = (char *) malloc(length + 1);
-    buffer[length] = '\0';
-    fread(buffer, 1, length, currentF);
-    fclose(currentF);
-    return buffer;
-}
-
-void allProcess(char *expression_string, int size, FILE *output) {
-    struct TokenArray tokenArray = tokenize(expression_string, size);
-    if (tokenArray.tokens->operator == '\n') {
-        fputc('\n', output);
-    } else {
-        double result = calculate(tokenArray);
-        char tmp[256];
-        sprintf(tmp, "%f", result);
-        fprintf(output, "%s\n", tmp);
+    char *source = NULL;
+    FILE *file = fopen(input, "r");
+    assert(file);
+    if (fseek(file, 0L, SEEK_END) == 0) {
+        long sizeOfFile = ftell(file);
+        source = malloc(sizeof(char) * (sizeOfFile + 1));
+        fseek(file, 0L, SEEK_SET);
+        size_t newLen = fread(source, sizeof(char), sizeOfFile, file);
+        if (ferror(file) != 0) {
+            fputs("Error reading file", stderr);
+        } else {
+            source[newLen] = '\0';
+        }
     }
+    fclose(file);
+    return source;
 }
 
-char *takeLine(int start, int end, const char *expression_string) {
+void calculateExpressionString(char *expression_string, unsigned int size, FILE *outputFile) {
+    struct TokenArray tokenArray = tokenize(expression_string, size);
+    double result = calculateExpressionTokens(tokenArray);
+    fprintf(outputFile, "%f\n", result);
+}
+
+char *takeLine(unsigned int start, unsigned int end, const char *expression_string) {
     char *line = (char *) malloc(end);
-    for (int i = 0; i < end; ++i) {
-        line[i] = expression_string[start];
-        start++;
+    for (int i = 0; i < end - start; ++i) {
+        line[i] = expression_string[start + i];
     }
     return line;
 }
