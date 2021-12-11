@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
         insertExpresionIntoDB(connection, insert_result, fileContent,
                               length_of_insert_result, expressionStartIndex, i);
     }
-    calculatAndUpdateExresion(connection, length_of_update_result);
-    printResultFromDb(connection, outputFile);
+    calculateAndUpdateExpression(connection, length_of_update_result);
+    printResultFromDB(connection, outputFile);
 
     mysql_close(connection);
 }
