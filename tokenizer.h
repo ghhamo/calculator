@@ -1,5 +1,5 @@
-#ifndef TOKENIZER
-#define TOKENIZER
+#ifndef TOKENIZER_H
+#define TOKENIZER_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,8 +66,9 @@ struct TokenArray {
     int size;
 };
 
-struct TokenArray tokenize(const char expression_string[], unsigned int sizeOfStr) {
+struct TokenArray tokenize(const char expression_string[]) {
     int t = 0;
+    unsigned int sizeOfStr = strlen(expression_string);
     struct Token *tokens = malloc(sizeOfStr * sizeof(struct Token));
     int numberStartIndex = -1;
     int numberEndIndex;

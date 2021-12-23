@@ -1,5 +1,5 @@
-#ifndef CONFUTIL
-#define CONFUTIL
+#ifndef CONFUTIL_H
+#define CONFUTIL_H
 #include <string.h>
 #include <stdio.h>
 
@@ -15,6 +15,8 @@ typedef struct Conf
     char *user;
     char *password;
 } Conf;
+
+Conf conf;
 
 ConfEntry parseConfEntry(char *conf);
 

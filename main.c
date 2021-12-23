@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <mysql.h>
+#include <pthread.h>
 #include "tokenizer.h"
 #include "calculator.h"
 #include "util.h"
@@ -12,38 +13,49 @@
 int main(int argc, char *argv[])
 {
     if (argc < 3)
-    { 
+    {
         printf("usage: calculator /path/to/input.txt /path/to/db.conf");
         return 0;
     }
     char *dbdata = readFile(argv[2]);
-    Conf conf = reedConfig(dbdata);
-    MYSQL *connection = createDB(conf);
-    int length_of_insert_result = strlen(insert_result);
-    int length_of_update_result = strlen(update_result);
+    int lengthOfDBData = strlen(dbdata);
+    conf = reedConfig(dbdata);
+    MYSQL *connection = createDB();
     char *inputFileName = argv[1];
     FILE *outputFile = fopen("output.txt", "w");
     char *fileContent = readFile(inputFileName);
     unsigned int fileContentLength = strlen(fileContent);
     int expressionStartIndex = 0;
+    pthread_t threadID;
+    pthread_t threadIDs[30];
+    InsertArg insertArgs[30];
+    int countOfThreads = 0;
     int i;
-    for (i = 0; i < fileContentLength; ++i)
+    for (i = 0; i <= fileContentLength; ++i)
     {
         char currentChar = fileContent[i];
-        if (currentChar == '\n')
+        if (currentChar == '\n' || currentChar == '\0')
         {
-            insertExpresionIntoDB(connection, insert_result, fileContent,
-                                  length_of_insert_result, expressionStartIndex, i);
+            if (countOfThreads > 29) {
+                printf("max number of expression is 30\n");
+                abort();
+            }
+            InsertArg insertArg;
+            insertArg.fileContent = fileContent;
+            insertArg.expressionStartIndex = expressionStartIndex;
+            insertArg.expressionEndIndex = i;
+            insertArgs[countOfThreads] = insertArg;
+            pthread_create(&threadID, NULL, insertExpresionIntoDB, &insertArgs[countOfThreads]);
+            threadIDs[countOfThreads] = threadID;
+            countOfThreads++;
             expressionStartIndex = i + 1;
         }
     }
-    if (expressionStartIndex < fileContentLength)
+    for (int i = 0; i < countOfThreads; i++)
     {
-        insertExpresionIntoDB(connection, insert_result, fileContent,
-                              length_of_insert_result, expressionStartIndex, i);
+        pthread_join(threadIDs[i], NULL);
     }
-    calculateAndUpdateExpression(connection, length_of_update_result);
+    proces(connection);
     printResultFromDB(connection, outputFile);
-
     mysql_close(connection);
 }

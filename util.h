@@ -1,5 +1,5 @@
-#ifndef UTIL
-#define UTIL
+#ifndef UTIL_H
+#define UTIL_H
 #include <assert.h>
 
 char *getSubString(unsigned int start, unsigned int end, const char *expression_string)
@@ -37,5 +37,4 @@ char *readFile(char *input)
     fclose(file);
     return source;
 }
-
 #endif
